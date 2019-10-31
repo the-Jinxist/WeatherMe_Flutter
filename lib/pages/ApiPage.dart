@@ -5,6 +5,12 @@ import 'package:api_tutorial/models.dart';
 import 'package:api_tutorial/widgets/WeatherDetail.dart';
 
 class ApiPage extends StatefulWidget {
+
+  final WeatherDetails weatherDetails;
+  final String location;
+
+  ApiPage({this.weatherDetails, this.location});
+
   @override
   _ApiPageState createState() => _ApiPageState();
 }
@@ -14,9 +20,15 @@ class _ApiPageState extends State<ApiPage> {
   String networkState = "working";
   String location;
 
+//  Double longitude;
+//  Double latitude;
+
   @override
   Widget build(BuildContext context) {
-    location = ModalRoute.of(context).settings.arguments;
+
+
+//    longitude = widget.weatherDetails.coordinates.longitude;
+//    latitude = widget.weatherDetails.coordinates.latitude;
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -25,7 +37,7 @@ class _ApiPageState extends State<ApiPage> {
           padding: EdgeInsets.fromLTRB(15.0, 0.0, 15.0, 0.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               SizedBox(height: 50.0,),
               Row(
@@ -40,23 +52,21 @@ class _ApiPageState extends State<ApiPage> {
                   Icon(Icons.wb_sunny, color: Colors.amber, size: 20.0,)
                 ],
               ),
-              SizedBox(height: 100.0,),
-              Padding(
-                padding: const EdgeInsets.only(left: 30.0),
-                child: Text("Temperature", textAlign: TextAlign.center, style: new TextStyle(
-                    fontFamily: "Montserrat", fontSize: 15.0, fontWeight: FontWeight.bold, color: Colors.white
-                    ,)
-                ),
+              SizedBox(height: 50.0,),
+              Text("Weather Details for ${widget.location}", textAlign: TextAlign.center, style: new TextStyle(
+                fontFamily: "Montserrat", fontSize: 22.0, fontWeight: FontWeight.bold, color: Colors.white, decoration: TextDecoration.underline
+                ,)
               ),
+              SizedBox(height: 50.0,),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
-                  Text("176",textAlign: TextAlign.start, style: new TextStyle(
-                      fontFamily: "Montserrat", fontSize: 150.0, fontWeight: FontWeight.bold, color: Colors.white),
+                  Text("${widget.weatherDetails.main.temperature}",textAlign: TextAlign.start, style: new TextStyle(
+                      fontFamily: "Montserrat", fontSize: 100.0, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                   SizedBox(width: 5.0,),
-                  Text("*C",textAlign: TextAlign.start, style: new TextStyle(
+                  Text("*F",textAlign: TextAlign.start, style: new TextStyle(
                       fontFamily: "Montserrat", fontSize: 50.0, fontWeight: FontWeight.bold, color: Colors.amber
                   ),
                   ),
@@ -67,9 +77,9 @@ class _ApiPageState extends State<ApiPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
-                  WeatherDetail(weatherDetail: "Maximum Temperature", weatherDetailsComment: "Mild", weatherDetailValue: "178 *c"),
+                  WeatherDetail(weatherDetail: "Maximum Temperature", weatherDetailsComment: "Mild", weatherDetailValue: "${widget.weatherDetails.main.temperatureMaximum} *F"),
                   SizedBox(width: 20.0,),
-                  WeatherDetail(weatherDetail: "Minimum Tempeature", weatherDetailsComment: "Mild", weatherDetailValue: "175 *c"),
+                  WeatherDetail(weatherDetail: "Minimum Tempeature", weatherDetailsComment: "Mild", weatherDetailValue: "${widget.weatherDetails.main.temperatureMinimum} *F"),
 
                 ],
               ),
@@ -78,42 +88,21 @@ class _ApiPageState extends State<ApiPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
-                  WeatherDetail(weatherDetail: "Wind Speed", weatherDetailsComment: "Fast", weatherDetailValue: "20 km/h"),
+                  WeatherDetail(weatherDetail: "Humidity", weatherDetailsComment: "Low", weatherDetailValue: "${widget.weatherDetails.main.humidity}"),
                   SizedBox(width: 20.0,),
-                  WeatherDetail(weatherDetail: "Wind Direction", weatherDetailsComment: "Low", weatherDetailValue: "30 deg"),
+                  WeatherDetail(weatherDetail: "Wind Speed", weatherDetailsComment: "Fast", weatherDetailValue: "${widget.weatherDetails.wind.speed} km/h"),
                   SizedBox(width: 20.0,),
-                  WeatherDetail(weatherDetail: "Pressure", weatherDetailsComment: "Normal", weatherDetailValue: "12"),
+                  WeatherDetail(weatherDetail: "Pressure", weatherDetailsComment: "Normal", weatherDetailValue: "${widget.weatherDetails.main.pressure}"),
 
                 ],
               )
-
-
-//              FutureBuilder(
-//                future: fetchWeatherDetails(location),
-//                builder: (context, snapshot){
-//                  if (snapshot.hasData){
-//                    WeatherDetails weatherDetails =  snapshot.data;
-//
-//                    return new Center(
-//                      child: new Text("The temperature is: ${weatherDetails.main.temperature / 273}",style:
-//                      new TextStyle(fontSize: 20.0, color: Colors.white)),
-//                    );
-//                  }else if (snapshot.hasError){
-//                    return new Center(
-//                      child: new Text("Sorry an error occured!: ${snapshot.error}",style:
-//                      new TextStyle(fontSize: 20.0, color: Colors.white)),
-//                    );
-//                  }
-//                  return Center(child: CircularProgressIndicator( backgroundColor: Colors.amber,));
-//                }
-//              ),
             ],
           ),
         ),
         backgroundColor: Colors.blue,
         floatingActionButton: FloatingActionButton(
           onPressed: (){
-            fetchWeatherDetails(location);
+//            fetchWeatherDetails(location);
           },
           elevation: 5.0,
           child: new Icon(Icons.refresh, color: Colors.white,),
@@ -123,24 +112,5 @@ class _ApiPageState extends State<ApiPage> {
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       ),
     );
-  }
-
-  Future<WeatherDetails> fetchWeatherDetails(String location) async{
-
-    final response =
-    await http.get('http://api.openweathermap.org/data/2.5/weather?q=$location&appid=bb17b57d2169e6ff5bfdd0983ce673bd');
-
-    if (response.statusCode == 200){
-      setState(() {
-        networkState = 'idle';
-      });
-
-      return WeatherDetails.getWeatherDetailsFromJson(json.decode(response.body));
-    }else{
-      setState(() {
-        networkState = 'idle';
-      });
-      return null;
-    }
   }
 }
